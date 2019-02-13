@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                haskssembler
-version:             0.1.0.0
+version:             0.1.1.0
 synopsis:            An assembler for the Hack machine language.
 description:		 A simple assembler to translate a program written
 					 in Hack assembly language into Hack machine language.
@@ -19,7 +19,7 @@ cabal-version:       >=1.10
 executable haskssembler
   main-is:             Main.hs
   ghc-options:		   -Wall -fwarn-tabs
-  -- other-modules:
+  other-modules:	   InstructionDataModel
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
   					 , attoparsec >= 0.13.2.2 && < 1.0
