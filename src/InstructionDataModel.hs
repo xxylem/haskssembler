@@ -8,6 +8,13 @@ import Text.Printf (printf)
     
 -- ================ --
 -- DATA DEFINITIONS --
+
+-- Provides the data representation for the hack instructions. The assembly commands can be parsed
+-- to this intermediate data representation.
+
+-- N.B. currently no support for: labels
+--                                line numbers (needed for labels)
+--                                comments (not needed really)
 -- ================ --
 
 -- TODO currently using self-made class to convert custom data representation to ByteString.
