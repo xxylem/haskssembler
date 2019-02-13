@@ -45,6 +45,8 @@ main = do
     writeProgramToFile (changeExt path) $! program
         where changeExt fp = dropExtension fp ++ ".hack" 
 
+-- TODO consider new module: one function for reading file to Program format. another for writing Program to file.
+
 -- TODO version 2: supports labels and symbols
 
 -- TODO check for failure and report line
