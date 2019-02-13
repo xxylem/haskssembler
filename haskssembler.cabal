@@ -4,7 +4,8 @@
 name:                haskssembler
 version:             0.1.0.0
 synopsis:            An assembler for the Hack machine language.
--- description:
+description:		 A simple assembler to translate a program written
+					 in Hack assembly language into Hack machine language.
 license:             BSD3
 license-file:        LICENSE
 author:              Joshua Taylor
