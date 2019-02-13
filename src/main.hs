@@ -28,6 +28,9 @@ import Text.Printf (printf)
 -- DATA DEFINITIONS --
 -- ================ --
 
+-- TODO currently using self-made class to convert custom data representation to ByteString.
+--      is there default functionality I can use to do this?
+
 class ShowB a where
     showB :: a -> BS.ByteString
 
@@ -159,32 +162,6 @@ instance ShowB Instruction where
         "111" `BS.append` showB comp `BS.append` showB dest `BS.append` showB jmp
 
 type Program = [Instruction]
-
--- ============ --
--- EXAMPLE DATA --
--- ============ --
-
--- A Instructions in ASM file format
-aInsASM1 :: BS.ByteString
-aInsASM1 = "@2"
-aInsASM2 :: BS.ByteString
-aInsASM2 = "@3"
-aInsASM3 :: BS.ByteString
-aInsASM3 = "@0"
--- A Instructions in Haskell Data Format
-aInsHask1 :: Instruction
-aInsHask1 = AddressInstruction $ Address 2
-aInsHask2 :: Instruction
-aInsHask2 = AddressInstruction $ Address 3
-aInsHask3 :: Instruction
-aInsHask3 = AddressInstruction $ Address 0
--- A Instructions in Binary Code
-aInsBC1 :: BS.ByteString
-aInsBC1 = "0000000000000010"
-aInsBC2 :: BS.ByteString
-aInsBC2 = "0000000000000011"
-aInsBC3 :: BS.ByteString
-aInsBC3 = "0000000000000000"
 
 -- ====== --
 -- PARSER --
