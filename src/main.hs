@@ -3,7 +3,7 @@
 import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8
 import qualified Data.ByteString.Char8 as BS
-import Data.ByteString.Conversion (toByteString')
+-- import Data.ByteString.Conversion (toByteString')
 import Prelude hiding (lines)
 import ReadArgs (readArgs)
 import System.FilePath (dropExtension)
@@ -147,7 +147,7 @@ instance ShowB Jump where
 newtype Address = Address Integer
 
 instance ShowB Address where
-    showB (Address location) = toByteString' (printf "%015b" location :: String)
+    showB (Address location) = BS.pack (printf "%015b" location :: String)
     --TODO a bit hacky: printf casts location to string and then gets converted to lazy BS then to strict BS
     --is there a way to convert an integer e.g. 7, to a formatted ByteString with the appropriate number of
         -- leading zeros?
