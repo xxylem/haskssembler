@@ -17,7 +17,7 @@ import Text.Printf (printf)
 -- same filename and extension .hack
 
 -- Example usage:
---    HackAssembler.exe file.asm
+--    haskssembler.exe file.asm
 
 -- Note: Ver 0. No support for Labels or Symbols
 -- A Instructions are only valid with integers,
@@ -296,7 +296,7 @@ parseASMLines (l:ls) =
 writeProgramToFile :: FilePath -> Program -> IO ()
 writeProgramToFile fp program = 
     withFile fp WriteMode (\h -> writeProgram h program)
-                where writeProgram h []     = return ()
+                where writeProgram _ []     = return ()
                       writeProgram h (l:ls) = BS.hPutStr h (showB l) >> BS.hPutStr h "\n" >> writeProgram h ls
 
 -- ============ --
@@ -319,8 +319,6 @@ main = do
 --   !!                         empty line
 --                              valid instruction
 --          should cause assembler to fail
-
--- TODO make file into project - make program executable that accepts one arg
 
 -- TODO arg handling now added and will provide usage hints, but is very primitive,
 --    only saying <program> String. rather than something like usage: <program> filepath
