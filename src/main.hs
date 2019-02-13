@@ -3,16 +3,11 @@
 import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8
 import qualified Data.ByteString.Char8 as BS
--- import Data.ByteString.Conversion (toByteString')
 import Prelude hiding (lines)
 import ReadArgs (readArgs)
 import System.FilePath (dropExtension)
 import System.IO
 import Text.Printf (printf)
--- import System.Environment (getArgs)
--- import System.Console.ParseArgs
--- import Text.Trifecta
--- import Data.Attoparsec.ByteString
 
 -- =========================================== --
 -- HACK ASSEMBLER
