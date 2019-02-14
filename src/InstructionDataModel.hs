@@ -5,20 +5,12 @@ module InstructionDataModel where
 import qualified Data.ByteString.Char8 as BS
 import Text.Printf (printf)
 
-    
 -- ================ --
 -- DATA DEFINITIONS --
 
 -- Provides the data representation for the hack instructions. The assembly commands can be parsed
 -- to this intermediate data representation.
-
--- N.B. currently no support for: labels
---                                line numbers (needed for labels)
---                                comments (not needed really)
 -- ================ --
-
--- TODO currently using self-made class to convert custom data representation to ByteString.
---      is there default functionality I can use to do this?
 
 class ShowB a where
     showB :: a -> BS.ByteString
@@ -135,9 +127,6 @@ newtype Address = Address Integer
 
 instance ShowB Address where
     showB (Address location) = BS.pack (printf "%015b" location :: String)
-    --TODO a bit hacky: printf casts location to string and then gets converted to lazy BS then to strict BS
-    --is there a way to convert an integer e.g. 7, to a formatted ByteString with the appropriate number of
-        -- leading zeros?
 
 data Instruction =
     AddressInstruction Address

@@ -14,8 +14,6 @@ import qualified Data.ByteString.Char8 as BS
 -- PARSER --
 -- The parseASMLines function will take a Program ([ByteString] alias) and output the program parsed
 -- into the intermediate data representation described in the IntructionDataModel module.
-
--- TODO currently lots of coupling between all three modules. Is there a better way to organise this?
 -- ====== --
 
 -- A Instructions

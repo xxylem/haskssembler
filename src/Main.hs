@@ -44,18 +44,3 @@ main = do
     let program = parseASMLines $ BS.lines file
     writeProgramToFile (changeExt path) $! program
         where changeExt fp = dropExtension fp ++ ".hack" 
-
--- TODO consider new module: one function for reading file to Program format. another for writing Program to file.
-
--- TODO version 2: supports labels and symbols
-
--- TODO check for failure and report line
---      currently ignores the line and continues
---      will require parsing specifically for comments
---      something that is not : a comment
---   !!                         empty line
---                              valid instruction
---          should cause assembler to fail
-
--- TODO arg handling now added and will provide usage hints, but is very primitive,
---    only saying <program> String. rather than something like usage: <program> filepath
