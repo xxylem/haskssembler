@@ -97,31 +97,34 @@ parseComputationInstruction = do
 
 parseComment :: Parser ()
 parseComment =
-    string "//" >> return ()
-
-parseRestOfLine :: Parser ()
-parseRestOfLine =
     skipSpace >>
-    (   parseComment
+    (   (string "//" >> return ())
     <|> endOfInput)
 
 -- Both Instructions
 parseInstruction :: Parser Instruction
 parseInstruction = 
    skipSpace >>
-    (    parseAddressInstruction
+    (   parseAddressInstruction
     <|> parseComputationInstruction)
-    <* parseRestOfLine
+    <*  parseComment
 
-parseLine :: BS.ByteString -> Maybe Instruction
-parseLine l = eitherRight $ 
-    parseOnly parseInstruction l
-        where eitherRight (Right r) = Just r
-              eitherRight _ = Nothing
+data ParseError =
+    InvalidLine
+  | Comment    
+
+runParseLine :: BS.ByteString -> Either ParseError Instruction
+runParseLine l = 
+    case parseOnly parseInstruction l of
+        (Right r)   -> Right r
+        _           -> case parseOnly parseComment l of
+                            (Right _)   -> Left Comment
+                            _           -> Left InvalidLine
 
 parseASMLines :: [BS.ByteString] -> Program
 parseASMLines [] = []
 parseASMLines (l:ls) =
-    case parseLine l of
-        Just instr -> instr : parseASMLines ls
-        Nothing    -> parseASMLines ls
+    case runParseLine l of
+        Right instr         -> instr : parseASMLines ls
+        Left Comment        -> parseASMLines ls
+        Left InvalidLine    -> [] -- should send error up chain really with line number.
