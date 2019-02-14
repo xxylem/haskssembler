@@ -118,21 +118,19 @@ runParseInstructionLine l =
         (Right r)   -> Right r
         (Left err)  -> Left $ InvalidLine err
 
-runParseIsEmptyLineOrComment :: BS.ByteString -> Bool
-runParseIsEmptyLineOrComment l =
-    case parseOnly parseComment l of
-        (Right _) -> True
-        (Left _)  -> False
-
-removeCommentsAndEmptyLines :: [BS.ByteString] -> [BS.ByteString]
-removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
-
 parseASMInstructionLines :: [BS.ByteString] -> Program
 parseASMInstructionLines [] = []
 parseASMInstructionLines (l:ls) =
     case runParseInstructionLine l of
         Right instr           -> instr : parseASMInstructionLines ls
         Left (InvalidLine _)  -> [] -- should send error up chain really with line number.
+
+removeCommentsAndEmptyLines :: [BS.ByteString] -> [BS.ByteString]
+removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
+            where runParseIsEmptyLineOrComment l =
+                    case parseOnly parseComment l of
+                        (Right _) -> True
+                        (Left _)  -> False
 
 parseASMLines :: [BS.ByteString] -> Program
 parseASMLines ls = parseASMInstructionLines $ removeCommentsAndEmptyLines ls
