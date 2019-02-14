@@ -77,6 +77,9 @@ instance ShowB Computation where
             M_MINUS_D   -> "1000111"
             D_AND_M     -> "1000000"
             D_OR_M      -> "1010101"
+    
+instance Show Computation where
+    show = BS.unpack . showB
 
 data Destination =
     NULL_DEST
@@ -100,6 +103,9 @@ instance ShowB Destination where
             AD          -> "110"
             AMD         -> "111"
 
+instance Show Destination where
+    show = BS.unpack . showB
+
 data Jump =
     NULL_JUMP
   | JGT
@@ -122,11 +128,17 @@ instance ShowB Jump where
             JLE         -> "110"
             JMP         -> "111"
 
+instance Show Jump where
+    show = BS.unpack . showB
+
 -- A Instructions
 newtype Address = Address Integer
 
 instance ShowB Address where
     showB (Address location) = BS.pack (printf "%015b" location :: String)
+
+instance Show Address where
+    show = BS.unpack . showB
 
 data Instruction =
     AddressInstruction Address
@@ -138,5 +150,8 @@ instance ShowB Instruction where
 
     showB (ComputeInstruction comp dest jmp) =
         "111" `BS.append` showB comp `BS.append` showB dest `BS.append` showB jmp
+
+instance Show Instruction where
+    show = BS.unpack . showB
 
 type Program = [Instruction]

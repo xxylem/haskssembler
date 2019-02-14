@@ -95,18 +95,29 @@ parseComputationInstruction = do
     jump <- parseJump
     return $ ComputeInstruction comp dest jump
 
+parseComment :: Parser ()
+parseComment =
+    string "//" >> return ()
+
+parseRestOfLine :: Parser ()
+parseRestOfLine =
+    skipSpace >>
+    (   parseComment
+    <|> endOfInput)
+
 -- Both Instructions
 parseInstruction :: Parser Instruction
 parseInstruction = 
    skipSpace >>
-        parseAddressInstruction
-    <|> parseComputationInstruction
+    (    parseAddressInstruction
+    <|> parseComputationInstruction)
+    <* parseRestOfLine
 
 parseLine :: BS.ByteString -> Maybe Instruction
 parseLine l = eitherRight $ 
     parseOnly parseInstruction l
         where eitherRight (Right r) = Just r
-              eitherRight _ = Nothing 
+              eitherRight _ = Nothing
 
 parseASMLines :: [BS.ByteString] -> Program
 parseASMLines [] = []
