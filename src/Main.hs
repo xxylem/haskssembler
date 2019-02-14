@@ -9,21 +9,6 @@ import ReadArgs (readArgs)
 import System.FilePath (dropExtension)
 import System.IO
 
--- =========================================== --
--- HACK ASSEMBLER
--- Given an input file.asm in assembly language, 
--- will parse file and convert to machine language.
--- Output file is written to same directory with
--- same filename and extension .hack
-
--- Example usage:
---    haskssembler.exe file.asm
-
--- Note: Ver 0. No support for Labels or Symbols
--- A Instructions are only valid with integers,
--- e.g. @3, @500
--- =========================================== --
-    
 -- ============= --
 -- OUTPUT WRITER --
 -- ============= --
