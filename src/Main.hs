@@ -26,6 +26,7 @@ main :: IO ()
 main = do
     (path :: FilePath) <- readArgs
     file <- BS.readFile path
-    let program = parseASMLines $ makeASMList $ BS.lines file
-    writeProgramToFile (changeExt path) $! program
-        where changeExt fp = dropExtension fp ++ ".hack" 
+    case parseASMLines $ makeASMList $ BS.lines file of
+        Right program -> writeProgramToFile (changeExt path) $! program
+                where changeExt fp = dropExtension fp ++ ".hack" 
+        Left err -> putStrLn ("Parse error on: " <> show err)

@@ -108,32 +108,25 @@ parseInstruction =
     (   parseAddressInstruction
     <|> parseComputationInstruction)
     <*  parseComment
-  
-newtype ParseError = InvalidLine String
-                    deriving (Eq, Show)
 
-runParseInstructionLine :: BS.ByteString -> Either ParseError Instruction
+type ErrorMsg = String
+data ParseError = InvalidLine ErrorMsg ASMLine
+                    deriving (Show)
+
+runParseInstructionLine :: ASMLine -> Either ParseError Instruction
 runParseInstructionLine l = 
-    case parseOnly parseInstruction l of
+    case parseOnly parseInstruction (getASMLineCode l) of
         (Right r)   -> Right r
-        (Left err)  -> Left $ InvalidLine err
+        (Left err)  -> Left $ InvalidLine err l
 
--- -- this will better be expressed as list func. that incorporates failure.
--- parseASMInstructionLines :: [ASMLine] -> Program
--- parseASMInstructionLines [] = []
--- parseASMInstructionLines (l:ls) =
---     case runParseInstructionLine (getASMLineCode l) of
---         Right instr           -> (Line l instr : parseASMInstructionLines ls
---         Left (InvalidLine _)  -> [] -- should send error up chain really with line number.
-
-parseASMInstructionLines :: [ASMLine] -> Program
+parseASMInstructionLines :: [ASMLine] -> Either ParseError Program
 parseASMInstructionLines asmLines = go asmLines 1
-            where go []     _           = []
+            where go []     _           = Right []
                   go (l:ls) lineNumber  = 
-                    case runParseInstructionLine (getASMLineCode l) of
-                        Right instr           -> (Line l (HSLine lineNumber instr)) : 
+                    case runParseInstructionLine l of
+                        Right instr           -> (:) <$> Right (Line l (HSLine lineNumber instr)) <*> 
                                                     go ls (lineNumber + 1)
-                        Left (InvalidLine _)  -> [] -- should send error up chain really with line number.
+                        Left err  -> Left err
 
 removeCommentsAndEmptyLines :: [ASMLine] -> [ASMLine]
 removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
@@ -142,5 +135,5 @@ removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
                         (Right _) -> True
                         (Left _)  -> False
 
-parseASMLines :: [ASMLine] -> Program
+parseASMLines :: [ASMLine] -> Either ParseError Program
 parseASMLines ls = parseASMInstructionLines $ removeCommentsAndEmptyLines ls

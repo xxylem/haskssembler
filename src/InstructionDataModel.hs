@@ -164,10 +164,11 @@ type ASMCode =
 
 data ASMLine =
     ASMLine ASMLineNumber ASMCode
+    deriving (Eq, Show)
 
 getASMLineNumber :: ASMLine -> ASMLineNumber
 getASMLineNumber (ASMLine n _) = n
-getASMLineCode :: ASMLine -> BS.ByteString
+getASMLineCode :: ASMLine -> ASMCode
 getASMLineCode (ASMLine _ c) = c
 
 makeASMList :: [BS.ByteString] -> [ASMLine]
@@ -180,6 +181,7 @@ type HSLineNumber =
 
 data HSLine =
     HSLine HSLineNumber Instruction
+    deriving (Show)
 
 getHSLineNumber :: HSLine -> HSLineNumber
 getHSLineNumber (HSLine n _) = n
@@ -190,6 +192,7 @@ data Line =
     Line
     ASMLine
     HSLine
+    deriving (Show)
 
 getASMLine :: Line -> ASMLine
 getASMLine (Line asml _) = asml
