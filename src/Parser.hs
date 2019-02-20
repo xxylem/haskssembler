@@ -1,14 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Parser 
-    ( parseASMLines )
+    ( parseASMLines
+    , getErrLineNumber
+    , getErrLineCode )
     where
 
 import InstructionDataModel
 
 import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8
-import qualified Data.ByteString.Char8 as BS
+-- import qualified Data.ByteString.Char8 as BS
 
 -- ====== --
 -- PARSER --
@@ -112,6 +114,10 @@ parseInstruction =
 type ErrorMsg = String
 data ParseError = InvalidLine ErrorMsg ASMLine
                     deriving (Show)
+getErrLineNumber :: ParseError -> ASMLineNumber
+getErrLineNumber (InvalidLine _ line) = getASMLineNumber line
+getErrLineCode :: ParseError -> ASMCode
+getErrLineCode (InvalidLine _ line) = getASMLineCode line
 
 runParseInstructionLine :: ASMLine -> Either ParseError Instruction
 runParseInstructionLine l = 

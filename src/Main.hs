@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
 import InstructionDataModel
-import Parser (parseASMLines)
+import Parser (parseASMLines, getErrLineNumber, getErrLineCode)
 
 import qualified Data.ByteString.Char8 as BS
 import Prelude hiding (lines)
@@ -29,4 +29,8 @@ main = do
     case parseASMLines $ makeASMList $ BS.lines file of
         Right program -> writeProgramToFile (changeExt path) $! program
                 where changeExt fp = dropExtension fp ++ ".hack" 
-        Left err -> putStrLn ("Parse error on: " <> show err)
+        Left err -> putStrLn ("Parse error on Line " 
+                                <> show (getErrLineNumber err) 
+                                <> ": "
+                                <> show (getErrLineCode err)
+                                )
