@@ -154,21 +154,29 @@ instance ShowB Instruction where
 instance Show Instruction where
     show = BS.unpack . showB
 
-type Program = [Instruction]
+type Program = [Line]
 
-newtype ASMLineNumber =
-    ASMLineNumber Integer
+type ASMLineNumber =
+    Integer
+
+type ASMCode =
+    BS.ByteString
 
 data ASMLine =
-    ASMLine ASMLineNumber BS.ByteString
+    ASMLine ASMLineNumber ASMCode
 
 getASMLineNumber :: ASMLine -> ASMLineNumber
 getASMLineNumber (ASMLine n _) = n
 getASMLineCode :: ASMLine -> BS.ByteString
 getASMLineCode (ASMLine _ c) = c
 
-newtype HSLineNumber =
-    HSLineNumber Integer
+makeASMList :: [BS.ByteString] -> [ASMLine]
+makeASMList bsLines = go bsLines 1 where
+    go [] _ = []
+    go (l:ls) lineNumber = ASMLine lineNumber l : go ls (lineNumber + 1)
+
+type HSLineNumber =
+    Integer
 
 data HSLine =
     HSLine HSLineNumber Instruction
