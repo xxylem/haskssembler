@@ -162,13 +162,28 @@ newtype ASMLineNumber =
 data ASMLine =
     ASMLine ASMLineNumber BS.ByteString
 
+getASMLineNumber :: ASMLine -> ASMLineNumber
+getASMLineNumber (ASMLine n _) = n
+getASMLineCode :: ASMLine -> BS.ByteString
+getASMLineCode (ASMLine _ c) = c
+
 newtype HSLineNumber =
     HSLineNumber Integer
 
 data HSLine =
     HSLine HSLineNumber Instruction
 
+getHSLineNumber :: HSLine -> HSLineNumber
+getHSLineNumber (HSLine n _) = n
+getHSLineCode :: HSLine -> Instruction
+getHSLineCode (HSLine _ c) = c
+
 data Line =
     Line
     ASMLine
     HSLine
+
+getASMLine :: Line -> ASMLine
+getASMLine (Line asml _) = asml
+getHSLine :: Line -> HSLine
+getHSLine (Line _ hsl) = hsl
