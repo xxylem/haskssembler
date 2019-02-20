@@ -155,3 +155,20 @@ instance Show Instruction where
     show = BS.unpack . showB
 
 type Program = [Instruction]
+
+newtype ASMLineNumber =
+    ASMLineNumber Integer
+
+data ASMLine =
+    ASMLine ASMLineNumber BS.ByteString
+
+newtype HSLineNumber =
+    HSLineNumber Integer
+
+data HSLine =
+    HSLine HSLineNumber Instruction
+
+data Line =
+    Line
+    ASMLine
+    HSLine

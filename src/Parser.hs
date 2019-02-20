@@ -118,6 +118,7 @@ runParseInstructionLine l =
         (Right r)   -> Right r
         (Left err)  -> Left $ InvalidLine err
 
+-- this will better be expressed as list func. that incorporates failure.
 parseASMInstructionLines :: [BS.ByteString] -> Program
 parseASMInstructionLines [] = []
 parseASMInstructionLines (l:ls) =
