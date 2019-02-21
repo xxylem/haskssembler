@@ -149,13 +149,17 @@ runParseASMInstructionLines asmLines = go asmLines 1
                         Left err  -> Left err
 
 moveLabelsToDictionary :: [ASMLine] -> ([ASMLine], Map.Map String Integer)
-moveLabelsToDictionary = undefined
--- 1) take in the list of ASMLines that are either: Labels or Instruction lines (or garbage)
--- 2) initialise empty map of type String (Key) -> Integer (Value)
-                        -- the key is the label and the value is the line number the label is on
--- 2) search ASMLines for label lines (need parser)
--- 3) Upon finding label, add Label and current line number (can keep index on step through list) to map
--- 4) Remove label from ASMLines (we will need to build up a new list as we go effectively)
+moveLabelsToDictionary asmLines = 
+    go asmLines 0 (asmLines, Map.empty)
+        where   go []     _        rsf                  = rsf 
+                go (l:ls) lineNumber (l':ls', rsfMap)   =
+                    case parseOnly parseLabel (getASMLineCode l) of
+                        Right label -> go ls 
+                                          lineNumber
+                                          (ls', Map.insert label lineNumber rsfMap)
+                        Left  _     -> go ls 
+                                          (lineNumber + 1) 
+                                          (l':ls', rsfMap)
 
 removeCommentsAndEmptyLines :: [ASMLine] -> [ASMLine]
 removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
