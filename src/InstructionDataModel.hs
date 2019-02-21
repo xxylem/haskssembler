@@ -178,7 +178,6 @@ makeASMList bsLines = go bsLines 1 where
 
 type HSLineNumber =
     Integer
-
 data HSLine =
     HSLine HSLineNumber Instruction
     deriving (Show)

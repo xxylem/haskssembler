@@ -3,13 +3,15 @@
 module Parser 
     ( parseASMLines
     , getErrLineNumber
-    , getErrLineCode )
+    , getErrLineCode
+    )
     where
 
 import InstructionDataModel
 
 import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8
+import qualified Data.Map.Strict as Map
 -- import qualified Data.ByteString.Char8 as BS
 
 -- ====== --
@@ -21,8 +23,8 @@ import Data.Attoparsec.ByteString.Char8
 -- A Instructions
 parseAddress :: Parser Address
 parseAddress =
-    char '@' >>
-    Address <$> decimal 
+        char '@' 
+    >>  Address <$> decimal 
 
 parseAddressInstruction :: Parser Instruction
 parseAddressInstruction = AddressInstruction <$> parseAddress
@@ -62,29 +64,30 @@ parseComputation =
 
 parseDestination :: Parser Destination
 parseDestination =
-    (   (   (string "AMD" >> return AMD)
-        <|> (string "AM" >> return AM)
-        <|> (string "AD" >> return AD)
-        <|> (string "MD" >> return MD)
-        <|> (char 'M' >> return M_DEST)
-        <|> (char 'A' >> return A_DEST)
-        <|> (char 'D' >> return D_DEST)
-        ) 
-        <* char '=')
+        (   (   (string "AMD" >> return AMD)
+            <|> (string "AM" >> return AM)
+            <|> (string "AD" >> return AD)
+            <|> (string "MD" >> return MD)
+            <|> (char 'M' >> return M_DEST)
+            <|> (char 'A' >> return A_DEST)
+            <|> (char 'D' >> return D_DEST)
+            ) 
+            <*  char '=')
     <|> return NULL_DEST
 
 parseJump :: Parser Jump
 parseJump =
-    (char ';' >>
-        (   (string "JGT" >> return JGT)
-        <|> (string "JEQ" >> return JEQ)
-        <|> (string "JGE" >> return JGE)
-        <|> (string "JLT" >> return JLT)
-        <|> (string "JNE" >> return JNE)
-        <|> (string "JLE" >> return JLE)
-        <|> (string "JMP" >> return JMP)
+        (   char ';' 
+        >>
+            (   (string "JGT" >> return JGT)
+            <|> (string "JEQ" >> return JEQ)
+            <|> (string "JGE" >> return JGE)
+            <|> (string "JLT" >> return JLT)
+            <|> (string "JNE" >> return JNE)
+            <|> (string "JLE" >> return JLE)
+            <|> (string "JMP" >> return JMP)
+            )
         )
-    )
     <|> return NULL_JUMP
 
 parseComputationInstruction :: Parser Instruction
@@ -99,17 +102,28 @@ parseComputationInstruction = do
 
 parseComment :: Parser ()
 parseComment =
-    skipSpace >>
-    (   (string "//" >> return ())
-    <|> endOfInput)
+        skipSpace 
+    >>  (   (string "//" >> return ())
+        <|> endOfInput
+        )
 
 -- Both Instructions
 parseInstruction :: Parser Instruction
 parseInstruction = 
-   skipSpace >>
-    (   parseAddressInstruction
-    <|> parseComputationInstruction)
+        skipSpace 
+    >>  (   parseAddressInstruction
+        <|> parseComputationInstruction
+        )
     <*  parseComment
+
+parseLabel :: Parser String
+parseLabel =
+        skipSpace
+    >>  char '('
+    >>  manyTill' anyChar (char ')') 
+    <*  parseComment
+
+-- (LOOP) skipspace -> open bracket -> many Not ')' -> ')' -> parseComment
 
 type ErrorMsg = String
 data ParseError = InvalidLine ErrorMsg ASMLine
@@ -125,14 +139,23 @@ runParseInstructionLine l =
         (Right r)   -> Right r
         (Left err)  -> Left $ InvalidLine err l
 
-parseASMInstructionLines :: [ASMLine] -> Either ParseError Program
-parseASMInstructionLines asmLines = go asmLines 1
+runParseASMInstructionLines :: [ASMLine] -> Either ParseError Program
+runParseASMInstructionLines asmLines = go asmLines 1
             where go []     _           = Right []
                   go (l:ls) lineNumber  = 
                     case runParseInstructionLine l of
                         Right instr           -> (:) <$> Right (Line l (HSLine lineNumber instr)) <*> 
                                                     go ls (lineNumber + 1)
                         Left err  -> Left err
+
+moveLabelsToDictionary :: [ASMLine] -> ([ASMLine], Map.Map String Integer)
+moveLabelsToDictionary = undefined
+-- 1) take in the list of ASMLines that are either: Labels or Instruction lines (or garbage)
+-- 2) initialise empty map of type String (Key) -> Integer (Value)
+                        -- the key is the label and the value is the line number the label is on
+-- 2) search ASMLines for label lines (need parser)
+-- 3) Upon finding label, add Label and current line number (can keep index on step through list) to map
+-- 4) Remove label from ASMLines (we will need to build up a new list as we go effectively)
 
 removeCommentsAndEmptyLines :: [ASMLine] -> [ASMLine]
 removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
@@ -142,4 +165,4 @@ removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
                         (Left _)  -> False
 
 parseASMLines :: [ASMLine] -> Either ParseError Program
-parseASMLines ls = parseASMInstructionLines $ removeCommentsAndEmptyLines ls
+parseASMLines ls = runParseASMInstructionLines $ removeCommentsAndEmptyLines ls
