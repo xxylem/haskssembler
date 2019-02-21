@@ -11,6 +11,7 @@ import InstructionDataModel
 
 import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8
+import Data.Attoparsec.Combinator (lookAhead)
 import qualified Data.Map.Strict as Map
 -- import qualified Data.ByteString.Char8 as BS
 
@@ -23,8 +24,20 @@ import qualified Data.Map.Strict as Map
 -- A Instructions
 parseAddress :: Parser Address
 parseAddress =
-        char '@' 
+        skipSpace
+    >>  char '@' 
     >>  Address <$> decimal 
+
+-- new parser: looks for @string //arbitrary comment and returns the string (symbol)
+
+parseAddressSymbol :: Parser String
+parseAddressSymbol =
+        skipSpace
+    >>  char '@'
+    >>  manyTill' anyChar (lookAhead    (eitherP    (   char ' '
+                                                    <|> char '/')
+                                        endOfInput))
+    <*  parseComment
 
 parseAddressInstruction :: Parser Instruction
 parseAddressInstruction = AddressInstruction <$> parseAddress
