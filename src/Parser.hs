@@ -140,7 +140,7 @@ runParseInstructionLine l =
         (Left err)  -> Left $ InvalidLine err l
 
 runParseASMInstructionLines :: [ASMLine] -> Either ParseError Program
-runParseASMInstructionLines asmLines = go asmLines 1
+runParseASMInstructionLines asmLines = go asmLines 0
             where go []     _           = Right []
                   go (l:ls) lineNumber  = 
                     case runParseInstructionLine l of
@@ -173,15 +173,7 @@ parseASMLines ls =
     runParseASMInstructionLines withoutCommentsOrLabels
         where (withoutCommentsOrLabels, labelMap) = 
                 moveLabelsToDictionary $ removeCommentsAndEmptyLines ls
-    
-    
-    -- runParseASMInstructionLines $ removeCommentsAndEmptyLines ls
 
--- take the ASMLines
--- remove the comments
--- get labels -> we now have a tuple (ASMLines (the ones left), Data Map with labels)
--- get instructions from remaining data lines
--- return the program to the caller
 
 -- (For now we can ignore the labels, we only want to successfully parse and remove them,
 -- they will be used later when symbols functionality is added.)
