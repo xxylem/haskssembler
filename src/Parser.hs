@@ -169,7 +169,14 @@ removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
                         (Left _)  -> False
 
 parseASMLines :: [ASMLine] -> Either ParseError Program
-parseASMLines ls = runParseASMInstructionLines $ removeCommentsAndEmptyLines ls
+parseASMLines ls =
+    runParseASMInstructionLines withoutCommentsOrLabels
+        where (withoutCommentsOrLabels, labelMap) = 
+                moveLabelsToDictionary $ removeCommentsAndEmptyLines ls
+    
+    
+    -- runParseASMInstructionLines $ removeCommentsAndEmptyLines ls
+
 -- take the ASMLines
 -- remove the comments
 -- get labels -> we now have a tuple (ASMLines (the ones left), Data Map with labels)
