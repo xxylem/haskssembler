@@ -151,7 +151,7 @@ runParseASMInstructionLines asmLines = go asmLines 1
 moveLabelsToDictionary :: [ASMLine] -> ([ASMLine], Map.Map String Integer)
 moveLabelsToDictionary asmLines = 
     go asmLines 0 (asmLines, Map.empty)
-        where   go []     _        rsf                  = rsf 
+        where   go []     _          rsf                = rsf 
                 go (l:ls) lineNumber (l':ls', rsfMap)   =
                     case parseOnly parseLabel (getASMLineCode l) of
                         Right label -> go ls 
@@ -170,3 +170,12 @@ removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
 
 parseASMLines :: [ASMLine] -> Either ParseError Program
 parseASMLines ls = runParseASMInstructionLines $ removeCommentsAndEmptyLines ls
+-- take the ASMLines
+-- remove the comments
+-- get labels -> we now have a tuple (ASMLines (the ones left), Data Map with labels)
+-- get instructions from remaining data lines
+-- return the program to the caller
+
+-- (For now we can ignore the labels, we only want to successfully parse and remove them,
+-- they will be used later when symbols functionality is added.)
+-- might be clearer as do notation
