@@ -140,11 +140,26 @@ parseLabel =
 
 type ErrorMsg = String
 data ParseError = InvalidLine ErrorMsg ASMLine
+                | NoSymbol    ErrorMsg ASMLine
                     deriving (Show)
 getErrLineNumber :: ParseError -> ASMLineNumber
 getErrLineNumber (InvalidLine _ line) = getASMLineNumber line
 getErrLineCode :: ParseError -> ASMCode
 getErrLineCode (InvalidLine _ line) = getASMLineCode line
+
+runParseSymbol :: Map.Map String Integer
+               -> Integer
+               -> ASMLine 
+               -> (Map.Map String Integer, Integer, Either ParseError Instruction)
+runParseSymbol dict nextVal l =
+    case parseOnly parseAddressSymbol (getASMLineCode l) of
+        (Right label) -> case Map.lookup label dict of
+                            Just val -> (dict, nextVal, Right $ AddressInstruction $ Address val)
+                            Nothing -> (Map.insert label nextVal dict,
+                                        nextVal + 1,
+                                        Right $ AddressInstruction $ Address nextVal)
+        (Left err)    -> (dict, nextVal, Left $ NoSymbol err l)
+        -- TODO a lot of state is managed through here, does state monad help?
 
 runParseInstructionLine :: ASMLine -> Either ParseError Instruction
 runParseInstructionLine l = 
