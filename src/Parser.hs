@@ -151,15 +151,30 @@ runParseInstructionLine l =
     case parseOnly parseInstruction (getASMLineCode l) of
         (Right r)   -> Right r
         (Left err)  -> Left $ InvalidLine err l
+        -- this function should take in the dict
+        -- first run symbol parse: if successful:
+                -- check symbol in dict
+                    -- if symbol present: generate Address Instruction with relevant value
+                    -- if symbol not present: insert into dict with next available address
+                                            -- generate Address Instruction with relevant value
+                -- WE MAY NEED STATE TO KEEP TRACK OF NEXT AVAILABLE ADDRESS
+                -- OTHER OPTION IS TO INITIALISE THIS FUNCTION WITH THE FIRST AVAILABLE ADDRESS
+                -- AND INCREMENT EACH TIME
+        -- if fail:
+            -- run normal parseInstruction and get relevant Instruction
+        --then fail the function returning Left ParseError if all else fails
 
-runParseASMInstructionLines :: [ASMLine] -> Either ParseError Program
-runParseASMInstructionLines asmLines = go asmLines 0
+runParseASMInstructionLines :: Map.Map String Integer -> [ASMLine] -> Either ParseError Program
+runParseASMInstructionLines dict asmLines = go asmLines 0
             where go []     _           = Right []
                   go (l:ls) lineNumber  = 
                     case runParseInstructionLine l of
                         Right instr           -> (:) <$> Right (Line l (HSLine lineNumber instr)) <*> 
                                                     go ls (lineNumber + 1)
                         Left err  -> Left err
+        -- pass dict to go function, which passes it to runParseInstructionLine
+        -- runParseInstructionLine will return the updated dictionary (or unchanged)
+        -- we pass the new dictionary through to the next call of the go function
 
 moveLabelsToDictionary :: [ASMLine] -> ([ASMLine], Map.Map String Integer)
 moveLabelsToDictionary asmLines = 
@@ -183,7 +198,7 @@ removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
 
 parseASMLines :: [ASMLine] -> Either ParseError Program
 parseASMLines ls =
-    runParseASMInstructionLines withoutCommentsOrLabels
+    runParseASMInstructionLines labelMap withoutCommentsOrLabels
         where (withoutCommentsOrLabels, labelMap) = 
                 moveLabelsToDictionary $ removeCommentsAndEmptyLines ls
 
