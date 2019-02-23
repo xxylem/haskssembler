@@ -33,5 +33,6 @@ main = do
                                 <> show (getErrLineNumber err) 
                                 <> ": "
                                 <> show (getErrLineCode err)
+                                <> ".\nDebug data: "
+                                <> show err
                                 )
-                                

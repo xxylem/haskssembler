@@ -13,7 +13,9 @@ import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8
 import Data.Attoparsec.Combinator (lookAhead)
 import qualified Data.Map.Strict as Map
--- import qualified Data.ByteString.Char8 as BS
+
+addressInitVal :: NextAddressVal
+addressInitVal = 16
 
 -- ====== --
 -- PARSER --
@@ -28,15 +30,17 @@ parseAddress =
     >>  char '@' 
     >>  Address <$> decimal 
 
--- new parser: looks for @string //arbitrary comment and returns the string (symbol)
-
 parseAddressSymbol :: Parser String
 parseAddressSymbol =
         skipSpace
     >>  char '@'
-    >>  manyTill' anyChar (lookAhead    (eitherP    (   char ' '
-                                                    <|> char '/')
-                                        endOfInput))
+    >>  manyTill' anyChar   (lookAhead  (eitherP    endOfInput
+                                                    (       char ' '
+                                                        <|> char '/'
+                                                        <|> char '\r'
+                                                    )
+                                        )
+                            )
     <*  parseComment
 
 parseAddressInstruction :: Parser Instruction
@@ -120,7 +124,6 @@ parseComment =
         <|> endOfInput
         )
 
--- Both Instructions
 parseInstruction :: Parser Instruction
 parseInstruction = 
         skipSpace 
@@ -136,8 +139,6 @@ parseLabel =
     >>  manyTill' anyChar (char ')') 
     <*  parseComment
 
--- (LOOP) skipspace -> open bracket -> many Not ')' -> ')' -> parseComment
-
 type ErrorMsg = String
 data ParseError = InvalidLine ErrorMsg ASMLine
                 | NoSymbol    ErrorMsg ASMLine
@@ -147,77 +148,107 @@ getErrLineNumber (InvalidLine _ line) = getASMLineNumber line
 getErrLineCode :: ParseError -> ASMCode
 getErrLineCode (InvalidLine _ line) = getASMLineCode line
 
-runParseSymbol :: Map.Map String Integer
-               -> Integer
+type Label = String
+type AddressVal = Integer
+type SymbolTable = Map.Map Label AddressVal
+type NextAddressVal = Integer
+
+initSymbolTable :: SymbolTable
+initSymbolTable =
+    Map.fromList [  ("SP",      0)
+                 ,  ("LCL",     1)
+                 ,  ("ARG",     2)
+                 ,  ("THIS",    3)
+                 ,  ("THAT",    4)
+                 ,  ("R0",      0)
+                 ,  ("R1",      1)
+                 ,  ("R2",      2)
+                 ,  ("R3",      3)
+                 ,  ("R4",      4)
+                 ,  ("R5",      5)
+                 ,  ("R6",      6)
+                 ,  ("R7",      7)
+                 ,  ("R8",      8)
+                 ,  ("R9",      9)
+                 ,  ("R10",     10)
+                 ,  ("R11",     11)
+                 ,  ("R12",     12)
+                 ,  ("R13",     13)
+                 ,  ("R14",     14)
+                 ,  ("R15",     15)
+                 ,  ("SCREEN",  16384)
+                 ,  ("KBD",     24576)
+                 ]
+
+runParseSymbol :: SymbolTable
+               -> NextAddressVal
                -> ASMLine 
-               -> (Map.Map String Integer, Integer, Either ParseError Instruction)
-runParseSymbol dict nextVal l =
+               -> Either ParseError (SymbolTable, NextAddressVal, Instruction)
+runParseSymbol symTab nextVal l =
     case parseOnly parseAddressSymbol (getASMLineCode l) of
-        (Right label) -> case Map.lookup label dict of
-                            Just val -> (dict, nextVal, Right $ AddressInstruction $ Address val)
-                            Nothing -> (Map.insert label nextVal dict,
-                                        nextVal + 1,
-                                        Right $ AddressInstruction $ Address nextVal)
-        (Left err)    -> (dict, nextVal, Left $ NoSymbol err l)
+        (Right sym) -> case Map.lookup sym symTab of
+                            Just val -> Right (symTab, 
+                                               nextVal, 
+                                               AddressInstruction $ Address val)
+                            Nothing  -> Right (Map.insert sym nextVal symTab,
+                                               nextVal + 1,
+                                               AddressInstruction $ Address nextVal)
+        (Left err)    -> Left $ NoSymbol err l
         -- TODO a lot of state is managed through here, does state monad help?
 
-runParseInstructionLine :: ASMLine -> Either ParseError Instruction
-runParseInstructionLine l = 
+runParseInstructionLine :: SymbolTable
+                        -> NextAddressVal
+                        -> ASMLine 
+                        -> Either ParseError (SymbolTable, NextAddressVal, Instruction)
+runParseInstructionLine symTab nextVal l =
     case parseOnly parseInstruction (getASMLineCode l) of
-        (Right r)   -> Right r
-        (Left err)  -> Left $ InvalidLine err l
-        -- this function should take in the dict
-        -- first run symbol parse: if successful:
-                -- check symbol in dict
-                    -- if symbol present: generate Address Instruction with relevant value
-                    -- if symbol not present: insert into dict with next available address
-                                            -- generate Address Instruction with relevant value
-                -- WE MAY NEED STATE TO KEEP TRACK OF NEXT AVAILABLE ADDRESS
-                -- OTHER OPTION IS TO INITIALISE THIS FUNCTION WITH THE FIRST AVAILABLE ADDRESS
-                -- AND INCREMENT EACH TIME
-        -- if fail:
-            -- run normal parseInstruction and get relevant Instruction
-        --then fail the function returning Left ParseError if all else fails
+        (Right r)   -> Right (symTab, nextVal, r)
+        (Left err)  -> case runParseSymbol symTab nextVal l of
+                        res@(Right _) -> res
+                        Left _ ->  Left $ InvalidLine err l
 
-runParseASMInstructionLines :: Map.Map String Integer -> [ASMLine] -> Either ParseError Program
-runParseASMInstructionLines dict asmLines = go asmLines 0
-            where go []     _           = Right []
-                  go (l:ls) lineNumber  = 
-                    case runParseInstructionLine l of
-                        Right instr           -> (:) <$> Right (Line l (HSLine lineNumber instr)) <*> 
-                                                    go ls (lineNumber + 1)
+runParseASMInstructionLines :: SymbolTable 
+                            -> [ASMLine] 
+                            -> Either ParseError Program
+runParseASMInstructionLines symTab asmLines = go symTab addressInitVal asmLines 0
+            where go _      _              []     _          = Right []
+                  go symTab' nextAddressVal (l:ls) lineNumber = 
+                    case runParseInstructionLine symTab' nextAddressVal l of
+                        Right (symTab'', nextAddressVal', instr) ->
+                                                (:) 
+                                            <$> Right (Line 
+                                                       l 
+                                                       (HSLine lineNumber instr)) 
+                                            <*> go symTab'' nextAddressVal' ls (lineNumber + 1) 
                         Left err  -> Left err
-        -- pass dict to go function, which passes it to runParseInstructionLine
-        -- runParseInstructionLine will return the updated dictionary (or unchanged)
-        -- we pass the new dictionary through to the next call of the go function
 
-moveLabelsToDictionary :: [ASMLine] -> ([ASMLine], Map.Map String Integer)
-moveLabelsToDictionary asmLines = 
-    go asmLines 0 (asmLines, Map.empty)
-        where   go []     _          rsf                = rsf 
-                go (l:ls) lineNumber (l':ls', rsfMap)   =
+moveLabelsToSymbolTable :: [ASMLine] 
+                       -> ([ASMLine], SymbolTable)
+moveLabelsToSymbolTable asmLines = 
+    go asmLines 0 [] initSymbolTable
+        where   go []     _          rsfASMLines rsfSymTab         = (rsfASMLines, rsfSymTab)
+                go (l:ls) lineNumber rsfASMLines rsfSymTab   =
                     case parseOnly parseLabel (getASMLineCode l) of
                         Right label -> go ls 
                                           lineNumber
-                                          (ls', Map.insert label lineNumber rsfMap)
+                                          rsfASMLines
+                                          (Map.insert label lineNumber rsfSymTab)
                         Left  _     -> go ls 
                                           (lineNumber + 1) 
-                                          (l':ls', rsfMap)
+                                          (rsfASMLines ++ [l]) --TODO very slow algorithm
+                                          rsfSymTab
 
-removeCommentsAndEmptyLines :: [ASMLine] -> [ASMLine]
+removeCommentsAndEmptyLines :: [ASMLine] 
+                            -> [ASMLine]
 removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
             where runParseIsEmptyLineOrComment l =
                     case parseOnly parseComment (getASMLineCode l) of
                         (Right _) -> True
                         (Left _)  -> False
 
-parseASMLines :: [ASMLine] -> Either ParseError Program
+parseASMLines :: [ASMLine] 
+              -> Either ParseError Program
 parseASMLines ls =
     runParseASMInstructionLines labelMap withoutCommentsOrLabels
         where (withoutCommentsOrLabels, labelMap) = 
-                moveLabelsToDictionary $ removeCommentsAndEmptyLines ls
-
-
--- (For now we can ignore the labels, we only want to successfully parse and remove them,
--- they will be used later when symbols functionality is added.)
--- might be clearer as do notation
+                moveLabelsToSymbolTable $ removeCommentsAndEmptyLines ls
