@@ -7,7 +7,3 @@ same filename and extension .hack
 
 Example usage:
 haskssembler.exe file.asm
-
-Note: Ver 0. No support for Labels or Symbols
-A Instructions are only valid with integers,
-e.g. @3, @500
