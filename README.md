@@ -7,3 +7,7 @@ same filename and extension .hack
 
 Example usage:
 haskssembler.exe file.asm
+
+NB. This is project 06 from the online course  
+Build a Modern Computer from First Principles: Nand to Tetris
+available on Coursera.
