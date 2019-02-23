@@ -16,6 +16,8 @@ import qualified Data.Map.Strict as Map
 
 addressInitVal :: NextAddressVal
 addressInitVal = 16
+initHSLineNumber :: AddressVal
+initHSLineNumber = 0
 
 -- ====== --
 -- PARSER --
@@ -225,19 +227,16 @@ runParseASMInstructionLines symTab asmLines = go symTab addressInitVal asmLines 
 moveLabelsToSymbolTable :: [ASMLine] 
                        -> ([ASMLine], SymbolTable)
 moveLabelsToSymbolTable asmLines = 
-    go asmLines 0 [] initSymbolTable
-        where   go []     _          rsfASMLines rsfSymTab         = (rsfASMLines, rsfSymTab)
-                go (l:ls) lineNumber rsfASMLines rsfSymTab   =
+    go asmLines initHSLineNumber initSymbolTable
+        where   tupApply (f, g) (a, b) = (f a, g b)
+                go []     _          symTab = ([], symTab)
+                go (l:ls) lineNumber symTab =
                     case parseOnly parseLabel (getASMLineCode l) of
-                        Right label -> go ls 
-                                          lineNumber
-                                          rsfASMLines
-                                          (Map.insert label lineNumber rsfSymTab)
-                        Left  _     -> go ls 
-                                          (lineNumber + 1) 
-                                          (rsfASMLines ++ [l]) --TODO very slow algorithm
-                                          rsfSymTab
-
+                        Right label ->  tupApply (id, Map.insert label lineNumber)
+                                                 (go ls lineNumber symTab)
+                        Left  _     ->  tupApply ((:) l, id)
+                                                 (go ls (lineNumber + 1) symTab)
+                
 removeCommentsAndEmptyLines :: [ASMLine] 
                             -> [ASMLine]
 removeCommentsAndEmptyLines = filter (not . runParseIsEmptyLineOrComment)
