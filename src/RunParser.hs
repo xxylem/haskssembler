@@ -103,7 +103,7 @@ runParseInstructionLine symTab nextVal l =
 runParseASMInstructionLines :: SymbolTable 
                             -> [ASMLine] 
                             -> Either ParseError Program
-runParseASMInstructionLines symTab asmLines = go symTab addressInitVal asmLines 0
+runParseASMInstructionLines symTab asmLines = go symTab addressInitVal asmLines initHSLineNumber
             where go _      _              []     _          = Right []
                   go symTab' nextAddressVal (l:ls) lineNumber = 
                     case runParseInstructionLine symTab' nextAddressVal l of
