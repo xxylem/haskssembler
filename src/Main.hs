@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
 import InstructionDataModel
-import Parser (parseASMLines, getErrLineNumber, getErrLineCode)
+import RunParser (parseASMLines, getErrLineNumber, getErrLineCode)
 
 import qualified Data.ByteString.Char8 as BS
 import Prelude hiding (lines)
