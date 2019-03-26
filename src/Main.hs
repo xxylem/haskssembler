@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
 
-import InstructionDataModel
+-- import InstructionDataModel
 import RunParser (parseASMLines, getErrLineNumber, getErrLineCode)
+
+import Data.Hack.MachineCode.Model as MC
+import Data.Hack.MachineCode.ConversionTo.ByteString as MCB
 
 import qualified Data.ByteString.Char8 as BS
 import Prelude hiding (lines)
@@ -13,11 +16,15 @@ import System.IO
 -- OUTPUT WRITER --
 -- ============= --
 
-writeProgramToFile :: FilePath -> Program -> IO ()
-writeProgramToFile fp program = 
-    withFile fp WriteMode (\h -> writeProgram h program)
-                where writeProgram _ []     = return ()
-                      writeProgram h (l:ls) = BS.hPutStr h (showB $ getHSLineCode $ getHSLine l) >> BS.hPutStr h "\n" >> writeProgram h ls
+-- writeProgramToFile :: FilePath -> Program -> IO ()
+-- writeProgramToFile fp program = 
+--     withFile fp WriteMode (\h -> writeProgram h program)
+--                 where writeProgram _ []     = return ()
+--                       writeProgram h (l:ls) = BS.hPutStr h (showB $ getHSLineCode $ getHSLine l) >> BS.hPutStr h "\n" >> writeProgram h ls
+
+writeHackFile :: FilePath -> MC.HackFile -> IO ()
+writeHackFile fp file =
+    BS.writeFile fp (MCB.convert file)
 
 -- ============ --
 -- MAIN PROGRAM --

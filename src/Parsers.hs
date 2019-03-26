@@ -8,7 +8,6 @@ import Control.Applicative ((<|>))
 import Data.Attoparsec.ByteString.Char8
 import Data.Attoparsec.Combinator (lookAhead)
 
-    
 -- ====================================================================================== --
 -- Parsers.hs Module --
 -- This module provides the suite of parsers that are used by the RunParser module 
