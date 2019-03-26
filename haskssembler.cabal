@@ -19,8 +19,7 @@ cabal-version:       >=1.10
 executable haskssembler
   main-is:             Main.hs
   ghc-options:         -Wall -fwarn-tabs
-  other-modules:       RunParser
-                     , Parsers
+  -- other-modules:       
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                      , attoparsec >= 0.13.2.2 && < 1.0
@@ -28,7 +27,7 @@ executable haskssembler
                      , ReadArgs >= 1.2.3 && < 2.0
                      , filepath >= 1.4.2.1 && < 2.0
                      , containers >= 0.5.11.0 && < 1.0
-                     , Hack-Jack-Library >= 0.1.0.2 && < 1.0
+                     , Hack-Jack-Library >= 0.1.0.4 && < 1.0
   hs-source-dirs:      src
                     
   default-language:    Haskell2010
