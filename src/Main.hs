@@ -7,6 +7,7 @@ import Data.Output.Model as OUT
 import Parser.ASM as P
 
 import qualified Data.ByteString.Char8 as BS
+import System.FilePath (isExtensionOf)
 import ReadArgs (readArgs)
 
 -- ============ --
@@ -15,8 +16,10 @@ import ReadArgs (readArgs)
 main :: IO ()
 main = do
     (filePath :: FilePath) <- readArgs
-    file <- BS.readFile filePath
-    let unparsedFile = SRC.toUnparsedFile filePath 1 file  
-    case P.parseASMFile unparsedFile of
-        Right asmProgram -> (OUT.writeOutputFile . MC2BS.convert . ASM2MC.convert) asmProgram
-        Left _ -> putStrLn "failed"
+    if ".asm" `isExtensionOf` filePath then do
+        file <- BS.readFile filePath
+        let unparsedFile = SRC.toUnparsedFile filePath 1 file  
+        case P.parseASMFile unparsedFile of
+            Right asmProgram -> (OUT.writeOutputFile . MC2BS.convert . ASM2MC.convert) asmProgram
+            Left _ -> putStrLn "failed"
+    else putStrLn "failed"
