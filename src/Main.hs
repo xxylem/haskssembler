@@ -3,27 +3,23 @@
 -- import InstructionDataModel
 -- import RunParser (parseASMLines, getErrLineNumber, getErrLineCode)
 
-import Data.Hack.ASM.Model as ASM
-import Data.Hack.ASM.ConversionTo.ByteString as ASMB
+import Data.Hack.ASM.ConversionTo.MachineCode as ASM2MC
+import Data.Hack.MachineCode.ConversionTo.ByteString as MC2BS
+import Data.Source.Model as SRC
+import Data.Output.Model as OUT
 import Parser.ASM as P
 
 import qualified Data.ByteString.Char8 as BS
-import Prelude hiding (lines)
 import ReadArgs (readArgs)
-import System.FilePath (dropExtension)
 
 -- ============ --
 -- MAIN PROGRAM --
 -- ============ --
 main :: IO ()
 main = do
-    (path :: FilePath) <- readArgs
-    file <- BS.readFile path
-    case P.parseASMFile file of
-        Right program -> writeAsHackFile (changeExt path) ( program)
-                where changeExt fp = dropExtension fp ++ ".hack" 
+    (filePath :: FilePath) <- readArgs
+    file <- BS.readFile filePath
+    let unparsedFile = SRC.toUnparsedFile filePath 1 file  
+    case P.parseASMFile unparsedFile of
+        Right asmProgram -> (OUT.writeOutputFile . MC2BS.convert . ASM2MC.convert) asmProgram
         Left _ -> putStrLn "failed"
-
-writeAsHackFile :: FilePath -> ASM.Program -> IO ()
-writeAsHackFile fp file =
-    BS.writeFile fp (ASMB.convert file)
