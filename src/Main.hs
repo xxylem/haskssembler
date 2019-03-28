@@ -1,7 +1,4 @@
-{-# LANGUAGE OverloadedStrings, ScopedTypeVariables #-}
-
--- import InstructionDataModel
--- import RunParser (parseASMLines, getErrLineNumber, getErrLineCode)
+{-# LANGUAGE ScopedTypeVariables #-}
 
 import Data.Hack.ASM.ConversionTo.MachineCode as ASM2MC
 import Data.Hack.MachineCode.ConversionTo.ByteString as MC2BS
