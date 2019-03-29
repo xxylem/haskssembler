@@ -21,5 +21,6 @@ main = do
         let unparsedFile = SRC.toUnparsedFile filePath 1 file  
         case P.parseASMFile unparsedFile of
             Right asmProgram -> (OUT.writeOutputFile . MC2BS.convert . ASM2MC.convert) asmProgram
-            Left _ -> putStrLn "failed"
-    else putStrLn "failed"
+            Left err -> putStrLn $ "Failed to parse " <> filePath <> ".\n"
+                              <> "Error: " <> show err
+    else putStrLn "Usage: haskssembler.exe \"file.asm\""
